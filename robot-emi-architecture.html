@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>機器人關節控制抗電磁干擾(EMI)通訊架構技術文件</title>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --bg-elevated: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #555555;
+    --accent: #8b5e34;
+    --accent-soft: #f0e6d8;
+    --border: #e0dcd4;
+    --code-bg: #f4f1ea;
+    --table-header: #efe8dc;
+    --shadow: rgba(0,0,0,0.06);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --bg-elevated: #211d16;
+      --text: #ecebe6;
+      --text-secondary: #b5aea0;
+      --accent: #d8a568;
+      --accent-soft: #362c1e;
+      --border: #3a352a;
+      --code-bg: #241f17;
+      --table-header: #2c2419;
+      --shadow: rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --bg-elevated: #211d16;
+    --text: #ecebe6;
+    --text-secondary: #b5aea0;
+    --accent: #d8a568;
+    --accent-soft: #362c1e;
+    --border: #3a352a;
+    --code-bg: #241f17;
+    --table-header: #2c2419;
+    --shadow: rgba(0,0,0,0.3);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", Georgia, serif;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+  header.doc-header {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  header.doc-header h1 {
+    font-size: 1.9rem;
+    line-height: 1.4;
+    margin: 0 0 0.8rem;
+    color: var(--text);
+  }
+  .meta {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    font-family: "Noto Sans TC", "PingFang TC", sans-serif;
+  }
+  .meta span { margin-right: 1.2rem; }
+  h2 {
+    font-size: 1.35rem;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 1.1rem;
+    margin-top: 2rem;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+  }
+  p { margin: 0.9rem 0; color: var(--text); }
+  strong { color: var(--text); }
+  .callout {
+    background: var(--accent-soft);
+    border-left: 4px solid var(--accent);
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+    font-family: "Noto Sans TC", "PingFang TC", sans-serif;
+    font-size: 0.95rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.2rem 0;
+    font-size: 0.92rem;
+    font-family: "Noto Sans TC", "PingFang TC", sans-serif;
+  }
+  .table-scroll {
+    overflow-x: auto;
+    margin: 1.2rem 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-scroll table { margin: 0; min-width: 480px; }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.55rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--table-header);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: var(--bg-elevated); }
+  code, .formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: var(--code-bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 1rem 1.2rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    border: 1px solid var(--border);
+  }
+  pre code { background: none; padding: 0; }
+  .diagram {
+    text-align: center;
+    color: var(--text);
+  }
+  blockquote {
+    margin: 1.2rem 0;
+    padding: 0.2rem 1.2rem;
+    border-left: 3px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .toc {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 1px 3px var(--shadow);
+    font-family: "Noto Sans TC", "PingFang TC", sans-serif;
+    font-size: 0.92rem;
+  }
+  .toc-title {
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    color: var(--accent);
+  }
+  .toc ol { margin: 0; padding-left: 1.2rem; }
+  .toc li { margin: 0.35rem 0; }
+  .toc a { color: var(--text); text-decoration: none; }
+  .toc a:hover { color: var(--accent); text-decoration: underline; }
+  footer.doc-footer {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-style: italic;
+    font-family: "Noto Sans TC", "PingFang TC", sans-serif;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="doc-header">
+    <h1>機器人關節控制抗電磁干擾(EMI)通訊架構技術文件</h1>
+    <div class="meta">
+      <span>版本 1.0</span>
+      <span>2026-09-12</span>
+      <span>主題:基於互斥對編碼與擴展漢明碼(Extended Hamming Code)的分層抗干擾設計</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">目錄</div>
+    <ol>
+      <li><a href="#s1">背景與動機</a></li>
+      <li><a href="#s2">第一層:致動層 — 互斥對編碼</a></li>
+      <li><a href="#s3">第二層:傳輸層 — 漢明碼自動糾錯</a></li>
+      <li><a href="#s4">第三層強化:Extended Hamming(8,4) — SECDED</a></li>
+      <li><a href="#s5">完整分層架構</a></li>
+      <li><a href="#s6">效益與限制的誠實評估</a></li>
+      <li><a href="#s7">與既有理論/技術的關係說明</a></li>
+      <li><a href="#s8">後續可行方向</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="s1">1. 背景與動機</h2>
+  <p>機器人手臂的關節控制訊號,在實際運作環境中會受到多種電磁干擾(EMI)來源影響,包括:</p>
+  <ul>
+    <li>伺服馬達 PWM 驅動產生的高頻雜訊</li>
+    <li>鄰近變頻器、無線通訊設備的電磁輻射</li>
+    <li>長距離電纜之間的訊號串擾(crosstalk)</li>
+  </ul>
+  <p>這些干擾若未被妥善處理,可能導致控制訊號中的位元被意外翻轉,使機器人執行「非既定軌跡」的動作,造成安全風險或設備損壞。</p>
+  <p>本文件推導並記錄一套<strong>分層防禦架構</strong>,目標是:</p>
+  <ol>
+    <li>讓系統在訊號遭受隨機位元翻轉時,能夠自動偵測並糾正,不中斷機器人運作</li>
+    <li>在無法安全糾正的情況下(多重位元錯誤),系統能誠實回報不確定性,觸發安全機制,而非靜默送出錯誤指令</li>
+    <li>在硬體接線層級,從物理上排除危險的矛盾動作(如同一致動器的開/合訊號同時觸發)</li>
+  </ol>
+  <div class="callout">
+    <strong>重要範疇說明</strong>:本架構設計目標是<strong>電磁干擾(EMI)</strong>——持續性或間歇性、強度相對溫和、通常只影響少數位元的雜訊。本架構<strong>不適用於電磁脈衝(EMP)</strong>等瞬間高能量、大規模同時破壞甚至造成硬體物理損毀的威脅;EMP 防護需仰賴法拉第籠屏蔽、突波保護器件、光纖隔離傳輸等完全不同層次的工程手段。
+  </div>
+
+  <h2 id="s2">2. 第一層:致動層 — 互斥對編碼(Mutual Exclusion Pairing)</h2>
+
+  <h3>2.1 基本規則定義</h3>
+  <p>將控制位元兩兩配對成「互斥對」,每一對之中規定<strong>恰好一個位元為 1</strong>:</p>
+  <ul>
+    <li>規則1(空間互斥):位元分成 k 組互斥對 (A, A')、(B, B') ……,每組不可同時為 0 或同時為 1</li>
+    <li>規則2(時間反斥):任兩個合法狀態之間,漢明距離(Hamming distance)必須 ≥ 2</li>
+  </ul>
+
+  <h3>2.2 定理:規則1 自動蘊含規則2</h3>
+  <p><strong>命題</strong>:若系統由 k 組互斥對構成,合法狀態共 2<sup>k</sup> 種,則任兩個不同合法狀態之間的最小漢明距離恆為 2,不須額外驗證。</p>
+  <p><strong>證明</strong>:任取兩個不同的合法狀態,兩者之間必然至少有一整組互斥對的取值不同。由於每組互斥對翻轉時,該對內的兩個位元會同時改變(例如 A=1,A'=0 變成 A=0,A'=1),故每組不同的互斥對貢獻 2 個位元差異。因此最小漢明距離 = 2 × (至少 1 組不同) = 2。∎</p>
+
+  <h3>2.3 四態範例與循環驅動序列</h3>
+  <p>以 k=2(4 位元、2 組互斥對)為例,合法狀態共 4 種:</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>狀態</th><th>A</th><th>A'</th><th>B</th><th>B'</th></tr>
+    <tr><td>S1</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+    <tr><td>S2</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+    <tr><td>S3</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+    <tr><td>S4</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+  </table>
+  </div>
+  <p>可排列出一個無限循環、且每步僅翻轉一組互斥對(漢明距離恆為 2)的驅動序列:</p>
+  <pre><code>S1(1010) → S2(1001) → S4(0101) → S3(0110) → 回到 S1(1010)</code></pre>
+  <p>此序列與兩相步進馬達的「全步進(full-step)驅動序列」在結構上完全一致,證實此推導與工業界既有實作方法一致。</p>
+
+  <h3>2.4 致動層的安全價值</h3>
+  <p>互斥對結構的核心價值在於<strong>物理層級的安全連鎖(interlock)</strong>:透過接線本身的拓樸,使「兩個矛盾動作同時觸發」在硬體上成為不可能發生的狀態,不依賴上層軟體邏輯是否正確判斷。即使控制程式發生錯誤或控制晶片當機,此層防護依然有效。</p>
+  <p><strong>限制</strong>:此結構的最小距離為 2,依 Hamming 理論的糾錯公式 ⌊(d-1)/2⌋,距離 2 只能<strong>偵測</strong>錯誤,無法<strong>自動糾正</strong>——偵測到異常後只能選擇停機或要求重傳。</p>
+
+  <h2 id="s3">3. 第二層:傳輸層 — 漢明碼自動糾錯</h2>
+
+  <h3>3.1 動機</h3>
+  <p>致動層的互斥對編碼僅能偵測錯誤、無法自動糾正,對於<strong>長距離、EMI 風險較高的傳輸線路</strong>(例如從控制箱到機器人手臂末端的線材),若每次偵測到異常都要求重傳或停機,將造成頻繁中斷,不利於連續運作。因此在傳輸層引入具備自動糾錯能力的漢明碼(Hamming Code)。</p>
+
+  <h3>3.2 Hamming(7,4) 構造</h3>
+  <p><strong>冗餘位元數推導</strong>:設資料位元數 m=4,需檢查位元數 r,須滿足:</p>
+  <p class="formula" style="display:block; padding:0.8rem 1rem;">2<sup>r</sup> ≥ m + r + 1</p>
+  <p>代入 r=3:2<sup>3</sup>=8 ≥ 4+3+1=8,恰好打平,為理論最省的完美碼(perfect code)。</p>
+
+  <p><strong>位元配置</strong>(位置以二進位表示):</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>位置</th><th>二進位</th><th>角色</th></tr>
+    <tr><td>1</td><td>001</td><td>檢查位 p1</td></tr>
+    <tr><td>2</td><td>010</td><td>檢查位 p2</td></tr>
+    <tr><td>3</td><td>011</td><td>資料位 d1</td></tr>
+    <tr><td>4</td><td>100</td><td>檢查位 p4</td></tr>
+    <tr><td>5</td><td>101</td><td>資料位 d2</td></tr>
+    <tr><td>6</td><td>110</td><td>資料位 d3</td></tr>
+    <tr><td>7</td><td>111</td><td>資料位 d4</td></tr>
+  </table>
+  </div>
+
+  <p><strong>編碼規則</strong>(偶校驗):</p>
+  <ul>
+    <li>p1 = d1 ⊕ d2 ⊕ d4(涵蓋二進位最低位為1的位置:1,3,5,7)</li>
+    <li>p2 = d1 ⊕ d3 ⊕ d4(涵蓋位置:2,3,6,7)</li>
+    <li>p4 = d2 ⊕ d3 ⊕ d4(涵蓋位置:4,5,6,7)</li>
+  </ul>
+
+  <p><strong>解碼與糾錯</strong>:接收端重新計算三組校驗,組成 3 位元「症狀碼(syndrome)」s4s2s1。此症狀碼的二進位值直接對應出錯的位置編號(0 表示無錯誤,1-7 對應上表位置),可直接反轉該位元完成修正,無需重傳。</p>
+
+  <h3>3.3 距離與能力對照</h3>
+  <div class="table-scroll">
+  <table>
+    <tr><th>最小距離 d</th><th>糾錯能力 ⌊(d-1)/2⌋</th><th>說明</th></tr>
+    <tr><td>2(互斥對結構)</td><td>0</td><td>僅能偵測,不能糾正</td></tr>
+    <tr><td>3(Hamming(7,4))</td><td>1</td><td>可自動糾正單一位元錯誤</td></tr>
+  </table>
+  </div>
+
+  <h3>3.4 Hamming(7,4) 的已知弱點</h3>
+  <p>若同時有 2 個位元被干擾翻轉,症狀碼會指向錯誤的位置,系統將<strong>誤判為另一個單一位元錯誤,並自信地修正到錯誤方向</strong>——這比完全不糾錯更危險,因為系統會靜默送出一個看似合理實則錯誤的指令,且不會發出任何警告。</p>
+
+  <h2 id="s4">4. 第三層強化:Extended Hamming(8,4) — SECDED</h2>
+
+  <h3>4.1 動機</h3>
+  <p>為堵住 3.4 節提出的弱點,加入一個總體校驗位元 p0,使系統從「單一錯誤糾正」升級為業界標準的 <strong>SECDED(Single Error Correction, Double Error Detection)</strong>。</p>
+
+  <h3>4.2 構造</h3>
+  <p class="formula" style="display:block; padding:0.8rem 1rem;">p0 = p1 ⊕ p2 ⊕ d1 ⊕ p4 ⊕ d2 ⊕ d3 ⊕ d4</p>
+  <p>即全部 8 個位元(含 p0 自身)的 XOR 結果恆為 0(整體偶校驗)。</p>
+  <p><strong>距離提升證明</strong>:原本 Hamming(7,4) 中任兩個距離恰為 3(奇數)的碼字對,加入全域偶校驗位元後,由於位元翻轉了奇數次,p0 的奇偶性必然也隨之改變,故距離自動提升為 4。</p>
+
+  <h3>4.3 解碼判斷邏輯</h3>
+  <div class="table-scroll">
+  <table>
+    <tr><th>3位元症狀碼</th><th>整體校驗結果</th><th>判斷</th></tr>
+    <tr><td>000</td><td>通過</td><td>無錯誤</td></tr>
+    <tr><td>非000</td><td>不通過</td><td>單一位元錯誤,依症狀碼定位並自動修正</td></tr>
+    <tr><td>000</td><td>不通過</td><td>p0 自身被翻轉,其餘7位元正確,僅修正 p0</td></tr>
+    <tr><td>非000</td><td>通過</td><td><strong>雙重位元錯誤</strong>——系統識別出無法安全判斷正確值,觸發安全停止/要求重傳,而非靜默送出可能錯誤的指令</td></tr>
+  </table>
+  </div>
+  <p>此第四種情況正是 Extended Hamming(8,4) 相對於原始 Hamming(7,4) 的核心改進:系統能夠區分「有把握的單一糾正」與「沒把握的雙重錯誤」,在後者情境下選擇保守處理。</p>
+
+  <h2 id="s5">5. 完整分層架構</h2>
+  <div class="diagram">
+  <pre><code>4個邏輯位元
+    │
+    ▼
+Extended Hamming(8,4) 編碼
+    │
+    ▼
+8個位元傳輸 ── (長距離線路,EMI 風險較高) ──▶ 症狀碼 + 總體校驗雙重判斷
+                                                  │
+                        ┌─────────────────────────┼─────────────────────────┐
+                        ▼                         ▼                         ▼
+                   0個錯誤:正常放行        1個錯誤:自動糾正,正常放行   2個錯誤:觸發安全停止
+                        │                         │
+                        └────────────┬────────────┘
+                                     ▼
+                          還原 4 個邏輯位元
+                                     │
+                                     ▼
+                          互斥對展開 ── (短距離,靠近致動器) ──▶ 8條實體線
+                                     │
+                                     ▼
+                              關節致動器硬體
+                       (物理接線保證矛盾動作不可能同時觸發)</code></pre>
+  </div>
+
+  <h3>5.1 分層設計原則(縱深防禦)</h3>
+  <div class="table-scroll">
+  <table>
+    <tr><th>層次</th><th>面對威脅</th><th>防禦機制</th><th>設計理由</th></tr>
+    <tr><td>傳輸層(長距離)</td><td>隨機位元翻轉(EMI、雜訊)</td><td>Extended Hamming(8,4) 自動糾錯+雙重錯誤偵測</td><td>長線材是雜訊入侵主要入口,需要主動糾正與誠實回報能力</td></tr>
+    <tr><td>致動層(短距離,靠近硬體)</td><td>邏輯層級的矛盾指令</td><td>互斥對物理接線</td><td>物理上直接排除危險狀態,不依賴軟體正確性的獨立保底防線</td></tr>
+  </table>
+  </div>
+  <p>兩層機制性質不同、互相獨立,即使其中一層失效(例如解碼器本身故障),另一層依然能提供保護,符合工業安全設計中的縱深防禦(defense in depth)精神。</p>
+
+  <h2 id="s6">6. 效益與限制的誠實評估</h2>
+
+  <h3>6.1 實際會強化的部分</h3>
+  <ol>
+    <li><strong>訊號完整性</strong>:單一位元錯誤的容忍率從 0% 提升到 100%(可自動糾正)</li>
+    <li><strong>降低非計畫性停機</strong>:單一位元錯誤不再需要中斷或重傳</li>
+    <li><strong>物理層級的危險動作防護</strong>:矛盾致動指令在硬體接線層級即被排除,不依賴軟體邏輯</li>
+  </ol>
+
+  <h3>6.2 不會被強化的部分</h3>
+  <ol>
+    <li><strong>不提升機器人的決策能力或「智慧」</strong>:本架構解決的是訊號完整性問題,與感知、規劃、決策等自主智慧層次的問題無關</li>
+    <li><strong>不能抵禦 EMP 或系統性硬體損壞</strong>:架構假設為隨機、獨立的位元翻轉,面對同時大規模破壞或硬體物理燒毀的情境無效</li>
+    <li><strong>雙重以上錯誤仍有殘餘風險</strong>:SECDED 保證雙重錯誤「至少不會被誤判成單一錯誤而靜默犯錯」,但仍無法自動糾正;三重以上錯誤的行為未在本文件範圍內驗證</li>
+  </ol>
+
+  <h3>6.3 成本考量</h3>
+  <p>Extended Hamming(8,4) 相較於原始 4 位元傳輸,需多 4 條線路與對應編解碼電路;互斥對展開後致動端需 8 條實體線。是否值得投入,應視實際部署環境的 EMI 強度而定——高干擾工業環境(電焊機器人、電力設備旁)效益明確,低干擾環境(一般室內協作機器人)可能構成過度工程。</p>
+
+  <h2 id="s7">7. 與既有理論/技術的關係說明</h2>
+  <p>本架構的各個組成元件均為既有成熟理論,並非本文件首創:</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>組成元件</th><th>對應既有理論/技術</th><th>起源</th></tr>
+    <tr><td>互斥對編碼</td><td>Dual-rail encoding / m-out-of-n code</td><td>非同步電路設計、1980年代起</td></tr>
+    <tr><td>距離與糾錯關係</td><td>Hamming code 理論</td><td>Richard Hamming, 1950</td></tr>
+    <tr><td>SECDED</td><td>Extended Hamming code</td><td>業界標準,廣泛用於伺服器 ECC 記憶體</td></tr>
+    <tr><td>分層防禦架構原則</td><td>Defense in depth</td><td>廣泛見於量子糾錯(如 dual-rail cat code)、工業安全連鎖、資安等多個獨立領域</td></tr>
+    <tr><td>循環驅動序列</td><td>步進馬達 full-step 驅動序列</td><td>電機工程標準做法</td></tr>
+  </table>
+  </div>
+  <p>本文件的貢獻在於:<strong>將上述獨立存在於不同工程領域的既有技術,系統性地整合成一套具體針對「機器人關節控制抗EMI」場景的分層架構</strong>,並提供完整的數學推導與正確性證明,而非提出全新的底層編碼理論。經檢索,未發現有文獻明確將「Hamming碼糾錯」與「dual-rail互斥安全連鎖」以此具體組合方式應用於機器人關節控制場景。</p>
+
+  <h2 id="s8">8. 後續可行方向</h2>
+  <ol>
+    <li><strong>原型驗證</strong>:使用 Arduino/樹莓派 + 步進馬達,搭配訊號產生器主動注入雜訊,實測系統的糾錯與偵錯表現</li>
+    <li><strong>量化實際部署環境的EMI強度</strong>,評估此架構的成本效益是否符合實際需求</li>
+    <li><strong>探討三重以上位元錯誤的處理策略</strong>,或評估更高階糾錯碼(如 BCH code)的適用性</li>
+    <li><strong>與工業安全標準(如 IEC 61800-5-2、ISO 13849)的安全等級對照分析</strong></li>
+  </ol>
+
+  <footer class="doc-footer">
+    本文件記錄一套推導過程完整、邏輯自洽的技術架構,其數學正確性已逐步驗證。實際部署前,建議進行原型測試與安全認證評估。
+  </footer>
+
+</div>
+</body>
+</html>
